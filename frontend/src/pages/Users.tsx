@@ -145,7 +145,9 @@ const Users = () => {
                           <span key={index} > {user._id == JSON.parse(userId || "") && index + 1} </span>
                        ))} ) </p>
                        <p className="danger">
-                             { currentUser?.currentAverage > currentUser?.lastAverage ? goodMessage : badeMessage }
+                             {data && (
+                                ( currentUser?.currentAverage ? currentUser.currentAverage : 0) > (currentUser?.lastAverage ? currentUser.lastAverage : 0) ? goodMessage : badeMessage 
+                             )}
                        </p>
                  </div>
 
