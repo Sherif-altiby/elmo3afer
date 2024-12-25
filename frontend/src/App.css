@@ -58,6 +58,15 @@ input::placeholder {
   cursor: pointer;
 }
 
+.txf-1{
+  flex: 1;
+}
+
+.txf-1 .img-txt{
+  width: 100%;
+  border-radius: 5px;
+}
+
 .d-input input {
   margin-bottom: 0px;
   position: absolute;
@@ -236,18 +245,19 @@ button:hover {
 
 .card.owner p {
   font-size: 15px;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
+  text-align: justify;
 }
 
 .t-img {
   width: 100%;
-  height: 280px;
+  height: 100%;
 }
 
 .t-img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  border-radius: 5px;
 }
 
 .loader {
@@ -379,6 +389,14 @@ p.admin-question{
   color: #004a77;
   font-size: 20px;
   margin-bottom: 20px;
+}
+
+.mo3afer{
+  width: 192px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  height: 100px;
 }
 
 @media (max-width: 1024px) {

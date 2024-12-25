@@ -14,7 +14,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: 'https://elmo3afer-nhqb-4adw63rzh-sherif-altibys-projects.vercel.app', 
+  origin: process.env.FRONTENDURL, 
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
   credentials: true,
 }));
