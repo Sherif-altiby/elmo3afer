@@ -425,6 +425,12 @@ app.post('/upload-link', async (req, res) => {
 
 })
 
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+  res.status(err.status || 500).json({ error: err.message });
+});
+
+
 const PORT = process.env.PORT;
 
 connectDB().then(() => {
