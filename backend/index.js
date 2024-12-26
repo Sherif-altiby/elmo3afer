@@ -6,6 +6,7 @@ import Questionnaire from "./model.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import cors from "cors";
 import { fileURLToPath } from 'url';
  
@@ -23,13 +24,15 @@ app.use(cors({
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
-const uploadDir = "uploads/";
+const uploadDir = path.join(os.tmpdir(), "uploads");
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+app.use('/uploads', express.static(uploadDir));
 
 
 const storage = multer.diskStorage({
