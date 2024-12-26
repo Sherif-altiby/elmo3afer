@@ -241,7 +241,6 @@ app.post('/rate/:id', async (req, res) => {
     }
 });
 
-
 app.post("/upload-image", upload.single("image"), async (req, res) => {
   try {
     const imagePath = req.file ? req.file.path : null;
@@ -253,36 +252,44 @@ app.post("/upload-image", upload.single("image"), async (req, res) => {
       });
     }
 
-    const existingDocument = await Questionnaire.findOne({});
-
-    if (existingDocument && existingDocument.image) {
-      if (fs.existsSync(existingDocument.image)) {
-        fs.unlinkSync(existingDocument.image);
-      }
-    }
-
-    const updatedQuestionnaire = await Questionnaire.findOneAndUpdate(
-      {},
-      { image: imagePath },
-      { upsert: true, new: true }
-    );
-
-    return res.status(200).json({
-      message: "Image uploaded successfully",
-      data: updatedQuestionnaire,
+     
+    res.status(200).json({
+      message: "Image upload in progress",
       status: true,
     });
 
-  } catch (err) {
+     
+    setTimeout(async () => {
+      try {
+        const existingDocument = await Questionnaire.findOne({});
 
+        if (existingDocument && existingDocument.image) {
+          if (fs.existsSync(existingDocument.image)) {
+            fs.unlinkSync(existingDocument.image);  
+          }
+        }
+
+        
+        const updatedQuestionnaire = await Questionnaire.findOneAndUpdate(
+          {},
+          { image: imagePath },
+          { upsert: true, new: true }
+        );
+
+        console.log("Image processing completed:", updatedQuestionnaire);
+      } catch (err) {
+        console.error("Error during image processing:", err.message);
+      }
+    }, 0);  
+  } catch (err) {
     return res.status(500).json({
       message: "Internal server error",
       error: err.message,
       status: false,
     });
-
   }
 });
+
 
 
 app.post("/add-question", async (req, res) => {
