@@ -6,7 +6,6 @@ import Questionnaire from "./model.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import os from "os";
 import cors from "cors";
 import { fileURLToPath } from 'url';
  
@@ -14,25 +13,19 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors({
-  origin: process.env.FRONTENDURL, 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
-  credentials: true,
-}));
+app.use(cors());
 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
-const uploadDir = path.join(os.tmpdir(), "uploads");
-
+const uploadDir = "uploads/";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-
-app.use('/uploads', express.static(uploadDir));
 
 
 const storage = multer.diskStorage({
@@ -94,356 +87,339 @@ app.get("/", async (req, res) => {
 })
 
 
-// app.post("/register", upload.single("image"), async (req, res) => {
+app.post("/register", upload.single("image"), async (req, res) => {
 
-//     const { name, email, password } = req.body;
+    const { name, email, password } = req.body;
 
-//     const imagePath = req.file ? req.file.path : null;
+    const imagePath = req.file ? req.file.path : null;
 
-//     console.log(imagePath);
+    console.log(imagePath);
 
-//     try{
+    try{
        
-//         const user = await Questionnaire.findOne({"users.email": email});
+        const user = await Questionnaire.findOne({"users.email": email});
 
-//         if(user){
-//             return res.status(400).json({
-//                 message: "User is alredy exist",
-//                 status: false
-//             })
-//         }
+        if(user){
+            return res.status(400).json({
+                message: "User is alredy exist",
+                status: false
+            })
+        }
 
-//         const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-//         const newUser = {
-//             name,
-//             email,
-//             password: hashedPassword,
-//             image: imagePath
-//         };
+        const newUser = {
+            name,
+            email,
+            password: hashedPassword,
+            image: imagePath
+        };
 
-//         const questionnaire = await Questionnaire.findOneAndUpdate(
-//             {}, 
-//             { $push: { users: newUser } },
-//             { upsert: true, new: true }
-//         );
+        const questionnaire = await Questionnaire.findOneAndUpdate(
+            {}, 
+            { $push: { users: newUser } },
+            { upsert: true, new: true }
+        );
 
-//         const createdUser = questionnaire.users.find(user => user.email === email);
+        const createdUser = questionnaire.users.find(user => user.email === email);
 
-//         return res.status(201).json({
-//             message: "user created successfully",
-//             data: createdUser,
-//             status: true
-//         })
+        return res.status(201).json({
+            message: "user created successfully",
+            data: createdUser,
+            status: true
+        })
 
-//     }catch(err){
+    }catch(err){
 
-//         return res.status(500).send({
-//             message: err.message,
-//             status: false
-//         })
+        return res.status(500).send({
+            message: err.message,
+            status: false
+        })
 
-//     }
-// });
+    }
+});
 
 
-// app.post("/login", async (req, res) => {
+app.post("/login", async (req, res) => {
 
-//     const {  email, password } = req.body;
+    const {  email, password } = req.body;
 
-//     try{
+    try{
        
-//         const questionnaire = await Questionnaire.findOne({ "users.email": email });
-//         if (!questionnaire) {
-//         return res.status(404).json({ 
-//             message: "User not found",
-//             status: false
-//          });
-//         }
+        const questionnaire = await Questionnaire.findOne({ "users.email": email });
+        if (!questionnaire) {
+        return res.status(404).json({ 
+            message: "User not found",
+            status: false
+         });
+        }
 
 
-//         const user = questionnaire.users.find((user) => user.email === email);
-//         if (!user) {
-//         return res.status(404).json({ 
-//             message: "User not found",
-//             status: false
-//          });
-//         }
+        const user = questionnaire.users.find((user) => user.email === email);
+        if (!user) {
+        return res.status(404).json({ 
+            message: "User not found",
+            status: false
+         });
+        }
 
-//         const isPasswordCorrect = await bcrypt.compare(password, user.password);
-//         if (!isPasswordCorrect) {
-//           return res.status(401).json({ 
-//             message: "Invalid credentials",
-//             status: false
-//          });
-//         }
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (!isPasswordCorrect) {
+          return res.status(401).json({ 
+            message: "Invalid credentials",
+            status: false
+         });
+        }
 
-//         res.status(200).json({
-//             message: "Login successful",
-//             user,
-//             status: true
-//         });
+        res.status(200).json({
+            message: "Login successful",
+            user,
+            status: true
+        });
 
-//     }catch(err){
+    }catch(err){
 
-//         return res.status(500).send({
-//             message: err.message,
-//             status: false
-//         })
+        return res.status(500).send({
+            message: err.message,
+            status: false
+        })
 
-//     }
-// });
+    }
+});
 
 
-// app.post('/rate/:id', async (req, res) => {
-//     try {
-//       const { id } = req.params; 
-//       const { rating } = req.body; 
+app.post('/rate/:id', async (req, res) => {
+    try {
+      const { id } = req.params; 
+      const { rating } = req.body; 
   
-//       const questionnaire = await Questionnaire.findOne({ "users._id": id });
+      const questionnaire = await Questionnaire.findOne({ "users._id": id });
   
-//       if (!questionnaire) {
-//         return res.status(404).json({ 
-//           message: "User not found",
-//           status: false,
-//         });
-//       }
+      if (!questionnaire) {
+        return res.status(404).json({ 
+          message: "User not found",
+          status: false,
+        });
+      }
   
-//       const user = questionnaire.users.find(user => user._id.toString() === id);
+      const user = questionnaire.users.find(user => user._id.toString() === id);
   
-//       if (!user) {
-//         return res.status(404).json({
-//           message: "User not found",
-//           status: false,
-//         });
-//       }
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+          status: false,
+        });
+      }
   
-//       user.lastAverage = user.currentAverage;
+      user.lastAverage = user.currentAverage;
   
-//       user.rates.push(rating);
+      user.rates.push(rating);
   
-//       user.currentAverage =
-//         user.rates.reduce((sum, rate) => sum + rate, 0) / user.rates.length;
+      user.currentAverage =
+        user.rates.reduce((sum, rate) => sum + rate, 0) / user.rates.length;
   
-//       await questionnaire.save();
+      await questionnaire.save();
   
-//       return res.status(200).json({
-//         message: "Rating added successfully",
-//         data: user,
-//         status: true,
-//       });
-//     } catch (err) {
-//       return res.status(500).json({
-//         message: "Internal server error",
-//         status: false,
-//         error: err.message,
-//       });
-//     }
-// });
-
-// app.post("/upload-image", upload.single("image"), async (req, res) => {
-//   try {
-//     const imagePath = req.file ? req.file.path : null;
-
-//     if (!imagePath) {
-//       return res.status(400).json({
-//         message: "Image file is required",
-//         status: false,
-//       });
-//     }
-
-     
-//     res.status(200).json({
-//       message: "Image upload in progress",
-//       status: true,
-//     });
-
-     
-//     setTimeout(async () => {
-//       try {
-//         const existingDocument = await Questionnaire.findOne({});
-
-//         if (existingDocument && existingDocument.image) {
-//           if (fs.existsSync(existingDocument.image)) {
-//             fs.unlinkSync(existingDocument.image);  
-//           }
-//         }
-
-        
-//         const updatedQuestionnaire = await Questionnaire.findOneAndUpdate(
-//           {},
-//           { image: imagePath },
-//           { upsert: true, new: true }
-//         );
-
-//         console.log("Image processing completed:", updatedQuestionnaire);
-//       } catch (err) {
-//         console.error("Error during image processing:", err.message);
-//       }
-//     }, 0);  
-//   } catch (err) {
-//     return res.status(500).json({
-//       message: "Internal server error",
-//       error: err.message,
-//       status: false,
-//     });
-//   }
-// });
+      return res.status(200).json({
+        message: "Rating added successfully",
+        data: user,
+        status: true,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        message: "Internal server error",
+        status: false,
+        error: err.message,
+      });
+    }
+});
 
 
+app.post("/upload-image", upload.single("image"), async (req, res) => {
+  try {
+    const imagePath = req.file ? req.file.path : null;
 
-// app.post("/add-question", async (req, res) => {
+    if (!imagePath) {
+      return res.status(400).json({
+        message: "Image file is required",
+        status: false,
+      });
+    }
+
+    const existingDocument = await Questionnaire.findOne({});
+
+    if (existingDocument && existingDocument.image) {
+      if (fs.existsSync(existingDocument.image)) {
+        fs.unlinkSync(existingDocument.image);
+      }
+    }
+
+    const updatedQuestionnaire = await Questionnaire.findOneAndUpdate(
+      {},
+      { image: imagePath },
+      { upsert: true, new: true }
+    );
+
+    return res.status(200).json({
+      message: "Image uploaded successfully",
+      data: updatedQuestionnaire,
+      status: true,
+    });
+
+  } catch (err) {
+
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+      status: false,
+    });
+
+  }
+});
+
+
+app.post("/add-question", async (req, res) => {
  
-//     try{
+    try{
 
-//         const { question } = req.body;
+        const { question } = req.body;
 
-//         const questionnaire = await Questionnaire.findOneAndUpdate(
-//             {},
-//             { question: question },
-//             { upsert: true, new: true }
-//         );
+        const questionnaire = await Questionnaire.findOneAndUpdate(
+            {},
+            { question: question },
+            { upsert: true, new: true }
+        );
 
-//         return res.status(200).json({
-//             message: "Qusrion added successfully",
-//             questionnaire,
-//             status: true,
-//         })
+        return res.status(200).json({
+            message: "Qusrion added successfully",
+            questionnaire,
+            status: true,
+        })
 
-//     }catch(err){
+    }catch(err){
 
-//         return res.status(500).json({
-//             message: "Internal server error",
-//             error: err.message,
-//             status: false,
-//           });
+        return res.status(500).json({
+            message: "Internal server error",
+            error: err.message,
+            status: false,
+          });
 
-//     }
+    }
 
-// });
+});
 
 
-// app.post("/add-answer/:id", async (req, res) => {
-//     try {
-//       const { id } = req.params;  
-//       const { answer } = req.body;  
+app.post("/add-answer/:id", async (req, res) => {
+    try {
+      const { id } = req.params;  
+      const { answer } = req.body;  
   
 
-//       if (!answer) {
-//         return res.status(400).json({
-//           message: "Answer is required",
-//           status: false,
-//         });
-//       }
+      if (!answer) {
+        return res.status(400).json({
+          message: "Answer is required",
+          status: false,
+        });
+      }
   
 
-//       const user = await Questionnaire.findOneAndUpdate(
-//         { "users._id": id }, 
-//         { $set: { "users.$.answer": answer } },  
-//         { new: true }  
-//       );
+      const user = await Questionnaire.findOneAndUpdate(
+        { "users._id": id }, 
+        { $set: { "users.$.answer": answer } },  
+        { new: true }  
+      );
   
 
-//       if (!user) {
-//         return res.status(404).json({
-//           message: "User not found",
-//           status: false,
-//         });
-//       }
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+          status: false,
+        });
+      }
   
 
-//       return res.status(200).json({
-//         message: "Answer added successfully",
-//         user,
-//         status: true,
-//       });
+      return res.status(200).json({
+        message: "Answer added successfully",
+        user,
+        status: true,
+      });
 
-//     } catch (error) {
+    } catch (error) {
 
-//         return res.status(500).json({
-//         message: "Internal server error",
-//         error: error.message,
-//         status: false
-//         });
+        return res.status(500).json({
+        message: "Internal server error",
+        error: error.message,
+        status: false
+        });
 
-//     }
-// });
+    }
+});
 
 
-// app.post('/active-questionnaire', async (req, res) => {
+app.post('/active-questionnaire', async (req, res) => {
  
-//     try{
+    try{
 
-//         const { status } = req.body
+        const { status } = req.body
 
-//         const questionnaire = await Questionnaire.findOneAndUpdate(
-//             {},
-//             { status: status },
-//             { upsert: true, new: true }
-//         )
+        const questionnaire = await Questionnaire.findOneAndUpdate(
+            {},
+            { status: status },
+            { upsert: true, new: true }
+        )
 
-//         return res.status(200).json({
-//             message: "Qusrion activated successfully",
-//             questionnaire,
-//             status: true,
-//         })
+        return res.status(200).json({
+            message: "Qusrion activated successfully",
+            questionnaire,
+            status: true,
+        })
 
-//     }catch(err){
+    }catch(err){
 
-//         return res.status(500).json({
-//         message: "Internal server error",
-//         error: err.message,
-//         status: false
-//         });
+        return res.status(500).json({
+        message: "Internal server error",
+        error: err.message,
+        status: false
+        });
          
-//     }
+    }
 
-// })
+})
 
-// app.post('/upload-link', async (req, res) => {
+app.post('/upload-link', async (req, res) => {
  
-//   try{
+  try{
 
-//     const { title, value } = req.body;
+    const { title, value } = req.body;
 
-//     const link = {
-//       title,
-//       value
-//     }
+    const link = {
+      title,
+      value
+    }
 
-//     const questionnaire = await Questionnaire.findOneAndUpdate(
-//       {}, 
-//       { $push: { links: link } },
-//       { upsert: true, new: true }
-//     );
+    const questionnaire = await Questionnaire.findOneAndUpdate(
+      {}, 
+      { $push: { links: link } },
+      { upsert: true, new: true }
+    );
 
-//     return res.status(200).json({
-//       message: "Link added successfully",
-//       status: true,
-//       questionnaire
-//     })
+    return res.status(200).json({
+      message: "Link added successfully",
+      status: true,
+      questionnaire
+    })
 
-//   }  catch(err){
+  }  catch(err){
  
-//     return res.status(500).json({
-//        message: "Internal server error",
-//        error: err.message,
-//        status: false
-//     });
+    return res.status(500).json({
+       message: "Internal server error",
+       error: err.message,
+       status: false
+    });
 
-//   }
+  }
 
-// })
-
-// app.use((err, req, res, next) => {
-//   console.error("Error:", err);
-//   res.status(err.status || 500).json({ error: err.message });
-// });
-
-export default (req, res) => {
-  app(req, res);  
-};
-
+})
 
 const PORT = process.env.PORT;
 
